@@ -1,4 +1,4 @@
-# terminal-notifier Swift Makefile
+# pi-terminal-notifier Swift Makefile
 
 # Build the Swift release version
 build:
@@ -12,27 +12,27 @@ debug:
 clean:
 	swift package clean
 	rm -rf .build
-	rm -rf terminal-notifier.app
-	rm -rf terminal-notifier-*.app
+	rm -rf pi-terminal-notifier.app
+	rm -rf pi-terminal-notifier-*.app
 	@echo "Build artifacts cleaned"
 
 # Create app bundle with Terminal icon (automatically signed)
 app: build
-	mkdir -p terminal-notifier.app/Contents/MacOS
-	mkdir -p terminal-notifier.app/Contents/Resources
-	cp .build/release/terminal-notifier terminal-notifier.app/Contents/MacOS/
-	cp Info.plist terminal-notifier.app/Contents/
+	mkdir -p pi-terminal-notifier.app/Contents/MacOS
+	mkdir -p pi-terminal-notifier.app/Contents/Resources
+	cp .build/release/pi-terminal-notifier pi-terminal-notifier.app/Contents/MacOS/
+	cp Info.plist pi-terminal-notifier.app/Contents/
 	@echo "App bundle created"
 	@echo "Installing Terminal icon..."
 	@if [ -f "/System/Applications/Utilities/Terminal.app/Contents/Resources/Terminal.icns" ]; then \
-		cp "/System/Applications/Utilities/Terminal.app/Contents/Resources/Terminal.icns" terminal-notifier.app/Contents/Resources/AppIcon.icns && \
+		cp "/System/Applications/Utilities/Terminal.app/Contents/Resources/Terminal.icns" pi-terminal-notifier.app/Contents/Resources/AppIcon.icns && \
 		echo "✅ Terminal icon installed"; \
 	else \
 		echo "⚠️  Terminal icon not found, app bundle will use default icon"; \
 	fi
 	@echo "Signing app bundle..."
 	@if command -v codesign >/dev/null 2>&1; then \
-		codesign --force --deep --sign - terminal-notifier.app && \
+		codesign --force --deep --sign - pi-terminal-notifier.app && \
 		echo "✅ App signed successfully" || \
 		echo "❌ Code signing failed - continuing without signature"; \
 	else \
@@ -43,8 +43,8 @@ app: build
 
 # Install the binary to /usr/local/bin
 install: build
-	cp .build/release/terminal-notifier /usr/local/bin/
-	@echo "✅ Binary installed to /usr/local/bin/terminal-notifier"
+	cp .build/release/pi-terminal-notifier /usr/local/bin/
+	@echo "✅ Binary installed to /usr/local/bin/pi-terminal-notifier"
 
 # Custom icon build targets
 app-with-icon:
@@ -72,17 +72,17 @@ app-icon-url:
 	./scripts/build_with_icon.sh "$$TEMP_ICON" "$(OUTPUT_NAME)" && \
 	rm -f "$$TEMP_ICON"
 
-# Kill any running terminal-notifier processes
+# Kill any running pi-terminal-notifier processes
 kill-processes:
-	@echo "Killing any running terminal-notifier processes..."
-	@pkill -f "terminal-notifier" 2>/dev/null && echo "✅ Processes killed" || echo "No processes found"
+	@echo "Killing any running pi-terminal-notifier processes..."
+	@pkill -f "pi-terminal-notifier" 2>/dev/null && echo "✅ Processes killed" || echo "No processes found"
 	@sleep 0.5
 
 # Quick test
 test: kill-processes
 	@echo "Running quick test..."
-	@if [ -d "terminal-notifier.app" ]; then \
-		./terminal-notifier.app/Contents/MacOS/terminal-notifier -message "Test notification" -title "Test" > /dev/null 2>&1 && \
+	@if [ -d "pi-terminal-notifier.app" ]; then \
+		./pi-terminal-notifier.app/Contents/MacOS/pi-terminal-notifier -message "Test notification" -title "Test" > /dev/null 2>&1 && \
 		sleep 3 && \
 		echo "✅ Test notification sent successfully"; \
 	else \
@@ -94,7 +94,7 @@ test: kill-processes
 # Test action buttons
 test-actions: kill-processes
 	@echo "Running action button tests..."
-	@if [ -d "terminal-notifier.app" ]; then \
+	@if [ -d "pi-terminal-notifier.app" ]; then \
 		swift tests/unit/test_action_buttons.swift && \
 		./tests/integration/test_action_buttons.sh; \
 	else \
@@ -106,7 +106,7 @@ test-actions: kill-processes
 # Test Unix tool behavior
 test-unix: kill-processes
 	@echo "Running Unix tool behavior tests..."
-	@if [ -d "terminal-notifier.app" ]; then \
+	@if [ -d "pi-terminal-notifier.app" ]; then \
 		./tests/integration/test_unix_tool_behavior.sh; \
 	else \
 		echo "❌ App bundle not found. Run 'make app' first."; \
@@ -117,7 +117,7 @@ test-unix: kill-processes
 # Test prompt/reply functionality
 test-prompt: kill-processes
 	@echo "Running prompt/reply tests..."
-	@if [ -d "terminal-notifier.app" ]; then \
+	@if [ -d "pi-terminal-notifier.app" ]; then \
 		./tests/integration/test_prompt_reply.sh; \
 	else \
 		echo "❌ App bundle not found. Run 'make app' first."; \
@@ -127,7 +127,7 @@ test-prompt: kill-processes
 
 # Show help
 help:
-	@echo "terminal-notifier Makefile"
+	@echo "pi-terminal-notifier Makefile"
 	@echo ""
 	@echo "Essential targets:"
 	@echo "  build          - Build release version"
@@ -147,7 +147,7 @@ help:
 	@echo "  test-actions   - Run action button tests"
 	@echo "  test-unix      - Test Unix tool behavior (stdin/stdout/stderr)"
 	@echo "  test-prompt    - Test prompt/reply functionality"
-	@echo "  kill-processes - Kill any running terminal-notifier processes"
+	@echo "  kill-processes - Kill any running pi-terminal-notifier processes"
 	@echo "  help           - Show this help"
 	@echo ""
 	@echo "Examples:"

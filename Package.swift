@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "terminal-notifier",
+    name: "pi-terminal-notifier",
     platforms: [
         .macOS(.v10_15)
     ],
     products: [
-        .executable(name: "terminal-notifier", targets: ["TerminalNotifier"])
+        .executable(name: "pi-terminal-notifier", targets: ["TerminalNotifier"])
     ],
     targets: [
         .executableTarget(
