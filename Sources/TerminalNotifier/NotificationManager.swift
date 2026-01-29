@@ -22,14 +22,11 @@ class NotificationManager: NSObject {
         // Note: We don't need to remove old notifications here.
         // UNNotificationRequest with the same identifier automatically replaces existing notifications.
         
-        let hasActions = (options["actions"] as? [[String: String]])?.isEmpty == false
-        
         let delivered = userNotificationsManager.deliverNotification(title: title, subtitle: subtitle, message: message, options: options, sound: sound)
         
         // Schedule app termination
-        // If action buttons are present, wait longer for user interaction (10 seconds)
-        // Otherwise, exit quickly after notification is sent (1 second)
-        let timeout: TimeInterval = hasActions ? 10.0 : 1.0
+        // Wait for user interaction (30 seconds timeout)
+        let timeout: TimeInterval = 30.0
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
             debugPrint("DEBUG: NotificationManager - Exiting after notification delivery (delivered: \(delivered))")
             exit(0)

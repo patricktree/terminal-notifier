@@ -348,8 +348,11 @@ class UserNotificationsManager: NSObject, UNUserNotificationCenterDelegate {
             return
         }
         
-        // Handle default notification click behavior
+        // Handle default notification click behavior (body click)
         debugPrint("DEBUG: UserNotificationsManager - didReceive response (default click)")
+        
+        // Output to stdout so callers can detect body clicks
+        print("CLICKED")
         
         let userInfo = response.notification.request.content.userInfo
         
@@ -367,6 +370,11 @@ class UserNotificationsManager: NSObject, UNUserNotificationCenterDelegate {
         // Handle command execution
         if let command = userInfo["command"] as? String {
             executeShellCommand(command)
+        }
+        
+        // Exit to allow scripts to capture the output
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            exit(0)
         }
         
         completionHandler()
