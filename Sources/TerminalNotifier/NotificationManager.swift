@@ -19,10 +19,8 @@ class NotificationManager: NSObject {
     func deliverNotification(title: String, subtitle: String?, message: String, options: [String: Any], sound: String?) {
         debugPrint("DEBUG: NotificationManager - Delivering notification - Title: \(title), Message: \(message)")
         
-        // Remove earlier notification with the same group ID
-        if let groupID = options["groupID"] as? String {
-            removeNotification(groupID: groupID)
-        }
+        // Note: We don't need to remove old notifications here.
+        // UNNotificationRequest with the same identifier automatically replaces existing notifications.
         
         let hasActions = (options["actions"] as? [[String: String]])?.isEmpty == false
         
@@ -44,21 +42,15 @@ class NotificationManager: NSObject {
         debugPrint("DEBUG: NotificationManager - Removing notifications with group ID: \(groupID)")
         
         let center = UNUserNotificationCenter.current()
-        center.getPendingNotificationRequests { requests in
-            let identifiersToRemove = requests.compactMap { request in
-                if let userInfo = request.content.userInfo as? [String: Any],
-                   let requestGroupID = userInfo["groupID"] as? String,
-                   requestGroupID == groupID {
-                    return request.identifier
-                }
-                return nil
-            }
-            
-            if !identifiersToRemove.isEmpty {
-                center.removePendingNotificationRequests(withIdentifiers: identifiersToRemove)
-                debugPrint("DEBUG: NotificationManager - Removed \(identifiersToRemove.count) notifications")
-            }
-        }
+        
+        // The notification identifier is the groupID itself (set in scheduleNotification)
+        // Remove from delivered notifications (already shown in notification center)
+        center.removeDeliveredNotifications(withIdentifiers: [groupID])
+        debugPrint("DEBUG: NotificationManager - Removed delivered notification with identifier: \(groupID)")
+        
+        // Also remove from pending notifications (scheduled but not yet shown)
+        center.removePendingNotificationRequests(withIdentifiers: [groupID])
+        debugPrint("DEBUG: NotificationManager - Removed pending notification with identifier: \(groupID)")
     }
     
     /// Lists notifications with a specific group ID
@@ -67,30 +59,36 @@ class NotificationManager: NSObject {
         debugPrint("DEBUG: NotificationManager - Listing notifications with group ID: \(groupID)")
         
         let center = UNUserNotificationCenter.current()
-        center.getPendingNotificationRequests { requests in
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        center.getDeliveredNotifications { notifications in
             var foundAny = false
             
-            for request in requests {
+            for notification in notifications {
+                let content = notification.request.content
                 if groupID == "ALL" {
-                    let title = request.content.title
-                    let message = request.content.body
-                    let requestGroupID = request.content.userInfo["groupID"] as? String ?? "No group ID"
+                    let title = content.title
+                    let message = content.body
+                    let requestGroupID = content.userInfo["groupID"] as? String ?? notification.request.identifier
                     print("\(requestGroupID)\t\(title)\t\(message)")
                     foundAny = true
-                } else if let userInfo = request.content.userInfo as? [String: Any],
-                          let requestGroupID = userInfo["groupID"] as? String,
-                          requestGroupID == groupID {
-                    let title = request.content.title
-                    let message = request.content.body
+                } else if notification.request.identifier == groupID {
+                    let title = content.title
+                    let message = content.body
                     print("\(groupID)\t\(title)\t\(message)")
                     foundAny = true
                 }
             }
             
             if !foundAny {
-                errorPrint("No notifications found for group ID: \(groupID)")
+                debugPrint("DEBUG: NotificationManager - No delivered notifications found for group ID: \(groupID)")
             }
+            
+            semaphore.signal()
         }
+        
+        // Wait for async operation to complete (with timeout)
+        _ = semaphore.wait(timeout: .now() + 2.0)
     }
     
     // MARK: - Helper Methods
