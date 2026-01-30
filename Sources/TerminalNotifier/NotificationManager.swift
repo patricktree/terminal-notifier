@@ -24,13 +24,10 @@ class NotificationManager: NSObject {
         
         let delivered = userNotificationsManager.deliverNotification(title: title, subtitle: subtitle, message: message, options: options, sound: sound)
         
-        // Schedule app termination
-        // Wait for user interaction (5 minutes timeout)
-        let timeout: TimeInterval = 300.0
-        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
-            debugPrint("DEBUG: NotificationManager - Exiting after notification delivery (delivered: \(delivered))")
-            exit(0)
-        }
+        // No timeout - wait indefinitely for user interaction.
+        // The process will exit when the user clicks or dismisses the notification
+        // (handled by UNUserNotificationCenterDelegate methods).
+        debugPrint("DEBUG: NotificationManager - Waiting for user interaction (no timeout)")
     }
     
     /// Removes notifications with a specific group ID
